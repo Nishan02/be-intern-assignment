@@ -4,8 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
-
+import { Post } from "./Post";
+import { Follow } from './Follow';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('increment')
@@ -19,6 +21,17 @@ export class User {
 
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
+
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
+
+  
+  @OneToMany(() => Follow, (follow) => follow.follower)
+  following: Follow[];
+
+  @OneToMany(() => Follow, (follow) => follow.following)
+  followers: Follow[];
+
 
   @CreateDateColumn()
   createdAt: Date;

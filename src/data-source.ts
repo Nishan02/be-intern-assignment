@@ -6,6 +6,6 @@ export const AppDataSource = new DataSource({
   synchronize: false, // Do not use synchronize, write migrations instead
   logging: true,
   entities: ['src/entities/**/*.ts'],
-  subscribers: [],
   migrations: ['src/migrations/**/*.ts'],
+  subscribers: [],
 });
