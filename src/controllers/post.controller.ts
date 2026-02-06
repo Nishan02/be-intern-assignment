@@ -1,10 +1,22 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AppDataSource } from '../data-source';
 import { Post } from '../entities/Post';
 import { Hashtag } from '../entities/Hashtag';
 import { Activity, ActivityType } from '../entities/Activity';
 
 export class PostController {
+  static delete(arg0: string, authenticate: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined, delete: any) {
+      throw new Error("Method not implemented.");
+  }
+  static create(arg0: string, authenticate: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined, arg2: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined, create: any) {
+      throw new Error("Method not implemented.");
+  }
+  static getOne(arg0: string, getOne: any) {
+      throw new Error("Method not implemented.");
+  }
+  static getAll(arg0: string, getAll: any) {
+      throw new Error("Method not implemented.");
+  }
   private static postRepo = AppDataSource.getRepository(Post);
   private static hashRepo = AppDataSource.getRepository(Hashtag);
 
