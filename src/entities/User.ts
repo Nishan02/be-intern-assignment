@@ -1,37 +1,41 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-import { Post } from "./Post";
-import { Follow } from './Follow';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { Post } from './Post';
+import { Like } from './Like';
+import { Activity } from './Activity';
+
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column()
   firstName: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column()
   lastName: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ unique: true })
   email: string;
 
   @OneToMany(() => Post, (post) => post.author)
   posts: Post[];
 
-  
-  @OneToMany(() => Follow, (follow) => follow.follower)
-  following: Follow[];
+  @ManyToMany(() => User, (user) => user.followers)
+  @JoinTable({
+    name: 'follows',
+    joinColumn: { name: 'followerId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'followingId', referencedColumnName: 'id' }
+  })
+  following: User[];
 
-  @OneToMany(() => Follow, (follow) => follow.following)
-  followers: Follow[];
+  @ManyToMany(() => User, (user) => user.following)
+  followers: User[];
 
+  @OneToMany(() => Like, (like) => like.user)
+  likes: Like[];
+
+  @OneToMany(() => Activity, (activity) => activity.user)
+  activities: Activity[];
 
   @CreateDateColumn()
   createdAt: Date;

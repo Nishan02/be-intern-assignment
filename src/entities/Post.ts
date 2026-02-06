@@ -1,27 +1,29 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from "typeorm";
-import { User } from "./User";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { User } from './User';
+import { Hashtag } from './Hashtag';
+import { Like } from './Like';
 
-@Entity()
+@Entity('posts')
 export class Post {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column("text")
+  @Column('text')
   content: string;
+
+  @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE' })
+  author: User;
+
+  @ManyToMany(() => Hashtag, (hashtag) => hashtag.posts, { cascade: true })
+  @JoinTable({ name: 'post_hashtags' })
+  hashtags: Hashtag[];
+
+  @OneToMany(() => Like, (like) => like.post)
+  likes: Like[];
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @ManyToOne(() => User, (user) => user.posts)
-  author: User;
-
-  @Column()
-  authorId: number;
-
-  // We will link these later as we build the other entities
-  // @OneToMany(() => Like, (like) => like.post)
-  // likes: Like[];
 }
