@@ -1,22 +1,25 @@
-import { Router } from 'express';
-import { validate } from '../middleware/validation.middleware';
-import { createUserSchema, updateUserSchema } from '../validations/user.validation';
-import { UserController } from '../controllers/user.controller';
+import { Router } from "express";
+import { UserController } from "../controllers/user.controller";
+import { validate } from "../middleware/validation.middleware";
+import { createUserSchema, updateUserSchema } from "../validations/user.validation";
 
-export const userRouter = Router();
-const userController = new UserController();
+const router = Router();
 
-// Get all users
-userRouter.get('/', userController.getAllUsers.bind(userController));
+// Special Social Endpoints (The "Interview-Winners")
+router.get("/feed", UserController.getFeed); // /api/users/feed
+router.get("/activity", UserController.getActivity); // /api/users/activity
+router.get("/:id/followers", UserController.getFollowers); // /api/users/:id/followers
 
-// Get user by id
-userRouter.get('/:id', userController.getUserById.bind(userController));
+// Standard CRUD
+router.get("/", UserController.getAll);
+router.get("/:id", UserController.getOne);
+router.post("/", validate(createUserSchema), UserController.create);
+router.put("/:id", validate(updateUserSchema), UserController.update);
+router.delete("/:id", UserController.delete);
 
-// Create new user
-userRouter.post('/', validate(createUserSchema), userController.createUser.bind(userController));
+// Action Endpoints
+router.post("/:id/follow", UserController.follow);
+router.post("/:id/unfollow", UserController.unfollow);
+router.post("/:id/like", UserController.like);
 
-// Update user
-userRouter.put('/:id', validate(updateUserSchema), userController.updateUser.bind(userController));
-
-// Delete user
-userRouter.delete('/:id', userController.deleteUser.bind(userController));
+export default router;
