@@ -1,149 +1,154 @@
-Backend Database Documentation
+## Backend Database Documentation
 
 This overview details the SQLite schema and the relational logic implemented via TypeORM for the social media API.
 
-1. Core Entities
-User Table (users)
+---
+
+
+### 1. Core Entities
+- **User Table (users)** 
 
 This is the primary identity table for the application.
 
-Fields
+**Fields**
 
-id (PK)
+- id (PK)
 
-firstName
+- firstName
 
-lastName
+- lastName
 
-email (Unique)
+- email (Unique)
 
-createdAt
+- createdAt
 
-updatedAt
+ -updatedAt
 
-Logic
+ **Logic**
 
-One-to-Many relationship with Post (authoring)
+- One-to-Many relationship with Post (authoring)
 
-Connected to Like and Activity for tracking user engagement
+- Connected to Like and Activity for tracking user engagement
 
-Self-referencing Many-to-Many relationship for follower/following
+- Self-referencing Many-to-Many relationship for follower/following
 (via the follows table)
 
-Post Table (posts)
+**Post Table (posts)**
 
-Contains all user-generated content.
+- Contains all user-generated content.
 
-Fields
+**Fields**
 
-id (PK)
+- id (PK)
 
-content (Text)
+- content (Text)
 
-authorId (FK)
+- authorId (FK)
 
-createdAt
+- createdAt
 
-updatedAt
+- updatedAt
 
-Logic
+**Logic**
 
-Many-to-One with User (author)
+- Many-to-One with User (author)
 
-Many-to-Many with Hashtag for categorization
+- Many-to-Many with Hashtag for categorization
 (via post_hashtags junction table)
 
-One-to-Many with Like to track post popularity
+- One-to-Many with Like to track post popularity
 
-Like Table (likes)
+**Like Table (likes)**
 
-A junction table managing post interactions.
+- A junction table managing post interactions.
 
-Fields
+**Fields**
 
-userId (PK / FK)
+- userId (PK / FK)
 
-postId (PK / FK)
+- postId (PK / FK)
 
-createdAt
+- createdAt
 
-Logic
+**Logic**
 
-Uses a composite primary key (userId + postId)
+- Uses a composite primary key (userId + postId)
 
-Ensures a user can like a specific post only once
+- Ensures a user can like a specific post only once
 
-Hashtag Table (hashtags)
+**Hashtag Table (hashtags)**
 
-Stores unique tags used across the platform.
+- Stores unique tags used across the platform.
 
-Fields
+**Fields**
 
-id (PK)
+- id (PK)
 
-tag (Unique string)
+- tag (Unique string)
 
-Logic
+**Logic**
 
-Many-to-Many relationship with Post
+- Many-to-Many relationship with Post
 
-Tags are normalized (lowercase) before saving to prevent duplicates
+- Tags are normalized (lowercase) before saving to prevent duplicates
 (e.g., #Tech vs #tech)
 
-Activity Table (activities)
+**Activity Table (activities)**
 
-A centralized log for user action history.
+- A centralized log for user action history.
 
-Fields
+**Fields**
 
-id (PK)
+- id (PK)
 
-userId (FK)
+- userId (FK)
 
-type (Enum)
+- type (Enum)
 
-referenceId (Target ID)
+- referenceId (Target ID)
 
-createdAt
+- createdAt
 
-Logic
+**Logic**
 
-Tracks events like POST_CREATED, FOLLOWED
+- Tracks events like POST_CREATED, FOLLOWED
 
-referenceId points to the object involved in the action
+- referenceId points to the object involved in the action
 
-2. Relational Mapping (ERD)
+## 2. Relational Mapping (ERD)
 
-(Entity Relationship Diagram representation can be added here)
+- (Entity Relationship Diagram representation can be added here)
 
-3. Data Performance (Indexing)
+## 3. Data Performance (Indexing)
 
-Several indexes are set up to keep the API responsive as the database grows, especially for feed and search endpoints.
+- Several indexes are set up to keep the API responsive as the database grows, especially for feed and search endpoints.
 
-Table	Index Target	Purpose
-users	email	Speeds up login and registration checks
-posts	authorId	Optimizes loading posts for a profile
-activities	userId, createdAt	Enables fast chronological activity queries
-hashtags	tag	Speeds up topic-based searches
-4. Key Design Decisions
+| Table     | Index Target              | Purpose                        |
+|-----------|----------------------|------------------------------------|
+| Users     | `email`              | Enables fast chronological activity queries   |
+| Post      | `author`, `createdAt`| Enables fast chronological activity queries  |
+| Hashtag   | `tag`                |Speeds up topic-based searches      |
+| activities| `userId, createdAt`  |       Enables fast chronological activity queries                             |
 
-Self-Referencing Follows
-A single junction table is used with followerId and followingId both referencing the User entity.
+## 4. Key Design Decisions
 
-Conflict Prevention
-Composite keys in the Like entity move “already liked” validation to the database layer for stronger consistency.
+**Self-Referencing Follows**
+- A single junction table is used with followerId and followingId both referencing the User entity.
 
-Automated Cleanup
-Relationships use onDelete: 'CASCADE' where appropriate
+**Conflict Prevention**
+- Composite keys in the Like entity move “already liked” validation to the database layer for stronger consistency.
+
+**Automated Cleanup**
+- Relationships use onDelete: 'CASCADE' where appropriate
 (e.g., deleting a user removes related activity logs).
 
-5. Potential Improvements
+## 5. Potential Improvements
 
-Caching
-Use Redis for high-traffic data (e.g., follower counts) to reduce database load.
+**Caching**
+- Use Redis for high-traffic data (e.g., follower counts) to reduce database load.
 
-Search Enhancements
-Upgrade from basic SQLite matching to FTS5 for richer post search capabilities.
+**Search Enhancements**
+- Upgrade from basic SQLite matching to FTS5 for richer post search capabilities.
 
-Scalability
-Introduce background workers to archive or prune activity logs older than 6 months.
+**Scalability**
+- Introduce background workers to archive or prune activity logs older than 6 months.
