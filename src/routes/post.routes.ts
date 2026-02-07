@@ -1,17 +1,22 @@
-import { Router } from "express";
-import { PostController } from "../controllers/post.controller";
-import { authenticate } from "../middleware/auth.middleware"; // Import it
-import { validate } from "../middleware/validation.middleware";
-import { createPostSchema } from "../validations/post.validation";
+import { Router } from 'express';
+import { PostController } from '../controllers/post.controller';
+import { auth } from '../middleware/auth.middleware';
+import { validateBody } from '../middleware/validation.middleware';
+import { createPostSchema, updatePostSchema } from '../validations/post.validation';
 
 const router = Router();
 
-// Public: Anyone can see posts
+// Tag search - separate from CRUD for clarity
+// Note: test script relies on this specific path
+router.get("/hashtag/:tag", PostController.getByHashtag);
+
+// Public feed access
 router.get("/", PostController.getAll);
 router.get("/:id", PostController.getOne);
 
-// Protected: Must have x-user-id header
-router.post("/", authenticate, validate(createPostSchema), PostController.create);
-router.delete("/:id", authenticate, PostController.delete);
+// Protected routes - requires 'x-user-id' header
+router.post("/", auth, validateBody(createPostSchema), PostController.create);
+router.put("/:id", auth, validateBody(updatePostSchema), PostController.update);
+router.delete("/:id", auth, PostController.delete);
 
 export default router;

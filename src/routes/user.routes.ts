@@ -1,25 +1,29 @@
-import { Router } from "express";
-import { UserController } from "../controllers/user.controller";
-import { validate } from "../middleware/validation.middleware";
-import { createUserSchema, updateUserSchema } from "../validations/user.validation";
+import { Router } from 'express';
+import { UserController } from '../controllers/user.controller';
+import { auth } from '../middleware/auth.middleware';
+import { validateBody } from '../middleware/validation.middleware';
+import { createUserSchema, updateUserSchema } from '../validations/user.validation';
 
 const router = Router();
 
-// Special Social Endpoints (The "Interview-Winners")
-router.get("/feed", UserController.getFeed); // /api/users/feed
-router.get("/activity", UserController.getActivity); // /api/users/activity
-router.get("/:id/followers", UserController.getFollowers); // /api/users/:id/followers
+// --- Social & Feed ---
+// Note: '/feed' must stay above '/:id' so Express doesn't think 'feed' is an ID
+router.get("/feed", auth, UserController.getPersonalizedFeed);
 
-// Standard CRUD
-router.get("/", UserController.getAll);
-router.get("/:id", UserController.getOne);
-router.post("/", validate(createUserSchema), UserController.create);
-router.put("/:id", validate(updateUserSchema), UserController.update);
-router.delete("/:id", UserController.delete);
+// Publicly viewable social info
+router.get("/:id/activity", UserController.getUserActivities);
+router.get("/:id/followers", UserController.getFollowers);
 
-// Action Endpoints
-router.post("/:id/follow", UserController.follow);
-router.post("/:id/unfollow", UserController.unfollow);
-router.post("/:id/like", UserController.like);
+// --- Standard User Management ---
+router.get("/", UserController.getAllUsers);
+router.get("/:id", UserController.getUserById);
+
+// Registration and updates
+router.post("/", validateBody(createUserSchema), UserController.createUser);
+router.put("/:id", validateBody(updateUserSchema), UserController.updateUser);
+router.delete("/:id", UserController.deleteUser);
+
+// --- Actions ---
+router.post("/:id/follow", auth, UserController.followUser);
 
 export default router;

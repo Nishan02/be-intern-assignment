@@ -2,6 +2,8 @@
 
 # Base URLs
 USERS_URL="http://localhost:3000/api/users"
+# new post and search urls
+POSTS_URL="http://localhost:3000/api/posts"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -18,16 +20,19 @@ make_request() {
     local method=$1
     local endpoint=$2
     local data=$3
+    # adding auth header helper
+    local user_id=$4
     
     echo "Request: $method $endpoint"
     if [ -n "$data" ]; then
         echo "Data: $data"
     fi
     
+    # send request with optional auth id
     if [ "$method" = "GET" ]; then
-        curl -s -X $method "$endpoint" | jq .
+        curl -s -X $method "$endpoint" -H "x-user-id: $user_id" | jq .
     else
-        curl -s -X $method "$endpoint" -H "Content-Type: application/json" -d "$data" | jq .
+        curl -s -X $method "$endpoint" -H "Content-Type: application/json" -H "x-user-id: $user_id" -d "$data" | jq .
     fi
     echo ""
 }
@@ -103,6 +108,64 @@ test_delete_user() {
     make_request "DELETE" "$USERS_URL/$user_id"
 }
 
+# --- New Post & Social Functions ---
+
+# handle follower testing
+test_followers() {
+    print_header "Testing User Followers"
+    read -p "Enter user ID: " user_id
+    make_request "GET" "$USERS_URL/$user_id/followers"
+}
+
+# handle activity testing
+test_activity() {
+    print_header "Testing User Activity"
+    read -p "Enter user ID: " user_id
+    make_request "GET" "$USERS_URL/$user_id/activity"
+}
+
+# create a new post
+test_create_post() {
+    print_header "Testing Create Post"
+    read -p "Author User ID (x-user-id): " auth_id
+    read -p "Post content: " content
+    read -p "Hashtags (e.g. #tag1,#tag2): " tags
+    
+    # format tags for json
+    formatted_tags=$(echo $tags | sed 's/,/","/g' | sed 's/^/"/' | sed 's/$/"/')
+    
+    local post_data=$(cat <<EOF
+{
+    "content": "$content",
+    "hashtags": [$formatted_tags]
+}
+EOF
+)
+    make_request "POST" "$POSTS_URL" "$post_data" "$auth_id"
+}
+
+# test the feed
+test_feed() {
+    print_header "Testing Personalized Feed"
+    read -p "Your User ID (x-user-id): " auth_id
+    make_request "GET" "$USERS_URL/feed" "" "$auth_id"
+}
+
+# hashtag search
+test_hashtag() {
+    print_header "Testing Hashtag Search"
+    read -p "Enter tag: " tag
+    make_request "GET" "$POSTS_URL/hashtag/$tag"
+}
+
+# follow action
+test_follow() {
+    print_header "Testing Follow User"
+    read -p "Your User ID (x-user-id): " auth_id
+    read -p "Target User ID to follow: " target_id
+    make_request "POST" "$USERS_URL/$target_id/follow" "" "$auth_id"
+}
+
 # Submenu functions
 show_users_menu() {
     echo -e "\n${GREEN}Users Menu${NC}"
@@ -111,16 +174,30 @@ show_users_menu() {
     echo "3. Create new user"
     echo "4. Update user"
     echo "5. Delete user"
-    echo "6. Back to main menu"
-    echo -n "Enter your choice (1-6): "
+    echo "6. Get Followers list"
+    echo "7. Get Activity history"
+    echo "8. Follow a user"
+    echo "9. Back to main menu"
+    echo -n "Enter your choice (1-9): "
+}
+
+# posts submenu
+show_posts_menu() {
+    echo -e "\n${GREEN}Posts & Social Menu${NC}"
+    echo "1. Create a post"
+    echo "2. View Personalized Feed"
+    echo "3. Search by Hashtag"
+    echo "4. Back to main menu"
+    echo -n "Enter your choice (1-4): "
 }
 
 # Main menu
 show_main_menu() {
     echo -e "\n${GREEN}API Testing Menu${NC}"
-    echo "1. Users"
-    echo "2. Exit"
-    echo -n "Enter your choice (1-2): "
+    echo "1. Users & Social"
+    echo "2. Posts & Feeds"
+    echo "3. Exit"
+    echo -n "Enter your choice (1-3): "
 }
 
 # Main loop
@@ -138,12 +215,28 @@ while true; do
                     3) test_create_user ;;
                     4) test_update_user ;;
                     5) test_delete_user ;;
-                    6) break ;;
+                    6) test_followers ;;
+                    7) test_activity ;;
+                    8) test_follow ;;
+                    9) break ;;
                     *) echo "Invalid choice. Please try again." ;;
                 esac
             done
             ;;
-        2) echo "Exiting..."; exit 0 ;;
+        2)
+            while true; do
+                show_posts_menu
+                read post_choice
+                case $post_choice in
+                    1) test_create_post ;;
+                    2) test_feed ;;
+                    3) test_hashtag ;;
+                    4) break ;;
+                    *) echo "Invalid choice. Please try again." ;;
+                esac
+            done
+            ;;
+        3) echo "Exiting..."; exit 0 ;;
         *) echo "Invalid choice. Please try again." ;;
     esac
-done 
+done

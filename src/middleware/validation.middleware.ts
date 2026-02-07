@@ -1,18 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 
-export const validate = (schema: Joi.ObjectSchema) => {
+// Higher-order function to handle request body validation
+export const validateBody = (schema: Joi.ObjectSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const { error } = schema.validate(req.body, {
+    
+    // stripUnknown is vital here to keep junk out of the DB
+    const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
     });
 
     if (error) {
-      const errorMessage = error.details.map((detail) => detail.message).join(', ');
-      return res.status(400).json({ message: errorMessage });
+      // map errors into a clean array and strip the Joi double quotes
+      const errors = error.details.map(d => d.message.replace(/"/g, ''));
+      return res.status(400).json({ errors });
     }
 
+    // Overwrite req.body with the sanitized 'value' from Joi
+    req.body = value;
     next();
   };
 };

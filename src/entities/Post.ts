@@ -1,4 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  CreateDateColumn, 
+  UpdateDateColumn, 
+  ManyToOne, 
+  ManyToMany, 
+  JoinTable, 
+  OneToMany 
+} from 'typeorm';
 import { User } from './User';
 import { Hashtag } from './Hashtag';
 import { Like } from './Like';
@@ -11,14 +21,16 @@ export class Post {
   @Column('text')
   content: string;
 
-  @ManyToOne(() => User, (user) => user.posts, { onDelete: 'CASCADE' })
+  // Link back to the user who wrote this
+  @ManyToOne(() => User, (u) => u.posts, { onDelete: 'CASCADE' })
   author: User;
 
-  @ManyToMany(() => Hashtag, (hashtag) => hashtag.posts, { cascade: true })
+  // Junction table for tags - we handle the 'owner' side here
+  @ManyToMany(() => Hashtag, (h) => h.posts, { cascade: true })
   @JoinTable({ name: 'post_hashtags' })
   hashtags: Hashtag[];
 
-  @OneToMany(() => Like, (like) => like.post)
+  @OneToMany(() => Like, (l) => l.post)
   likes: Like[];
 
   @CreateDateColumn()

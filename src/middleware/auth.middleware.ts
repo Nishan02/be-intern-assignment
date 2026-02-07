@@ -1,20 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * Custom Middleware to simulate authentication.
- * It expects an 'x-user-id' header to identify the current user.
- */
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.headers['x-user-id'];
+// Simple auth check - expects 'x-user-id' for local dev/testing
+export const auth = (req: Request, res: Response, next: NextFunction) => {
+  const uid = req.headers['x-user-id'];
 
-  if (!userId) {
+  if (!uid) {
     return res.status(401).json({ 
-      message: 'Authentication required. Please provide x-user-id in headers.' 
+      error: 'Missing x-user-id header' 
     });
   }
 
-  // Attach the userId to the request object so controllers can use it
-  (req as any).userId = parseInt(userId as string, 10);
+  // Cast to number and attach to request for controller access
+  // Using + prefix is a common shorthand for parseInt
+  (req as any).userId = +uid;
 
   next();
 };

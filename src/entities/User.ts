@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  CreateDateColumn, 
+  UpdateDateColumn, 
+  OneToMany, 
+  ManyToMany, 
+  JoinTable 
+} from 'typeorm';
 import { Post } from './Post';
 import { Like } from './Like';
 import { Activity } from './Activity';
@@ -17,10 +26,12 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @OneToMany(() => Post, (post) => post.author)
+  // Relation to posts authored by this user
+  @OneToMany(() => Post, (p) => p.author)
   posts: Post[];
 
-  @ManyToMany(() => User, (user) => user.followers)
+  // Self-referencing relationship for the follow system
+  @ManyToMany(() => User, (u) => u.followers)
   @JoinTable({
     name: 'follows',
     joinColumn: { name: 'followerId', referencedColumnName: 'id' },
@@ -28,13 +39,13 @@ export class User {
   })
   following: User[];
 
-  @ManyToMany(() => User, (user) => user.following)
+  @ManyToMany(() => User, (u) => u.following)
   followers: User[];
 
-  @OneToMany(() => Like, (like) => like.user)
+  @OneToMany(() => Like, (l) => l.user)
   likes: Like[];
 
-  @OneToMany(() => Activity, (activity) => activity.user)
+  @OneToMany(() => Activity, (a) => a.user)
   activities: Activity[];
 
   @CreateDateColumn()

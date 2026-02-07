@@ -1,8 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Unique } from "typeorm";
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  CreateDateColumn, 
+  ManyToOne, 
+  JoinColumn,
+  Unique 
+} from "typeorm";
 import { User } from "./User";
 
-@Entity()
-@Unique(["followerId", "followingId"]) // Prevents duplicate follows
+@Entity('follows')
+// unique constraint to prevent double-following the same person
+@Unique(["followerId", "followingId"]) 
 export class Follow {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,9 +25,13 @@ export class Follow {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User)
+  // The person doing the following
+  @ManyToOne(() => User, (u) => u.following)
+  @JoinColumn({ name: "followerId" })
   follower: User;
 
-  @ManyToOne(() => User)
+  // The person being followed
+  @ManyToOne(() => User, (u) => u.followers)
+  @JoinColumn({ name: "followingId" })
   following: User;
 }

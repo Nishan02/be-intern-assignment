@@ -1,38 +1,31 @@
 import Joi from 'joi';
 
+// Common constraints to avoid repetition
+const nameStr = Joi.string().min(2).max(255);
+const emailStr = Joi.string().email().max(255);
+
 export const createUserSchema = Joi.object({
-  firstName: Joi.string().required().min(2).max(255).messages({
+  firstName: nameStr.required().messages({
     'string.empty': 'First name is required',
-    'string.min': 'First name must be at least 2 characters long',
-    'string.max': 'First name cannot exceed 255 characters',
+    'string.min': 'Name is too short (min 2 chars)'
   }),
-  lastName: Joi.string().required().min(2).max(255).messages({
-    'string.empty': 'Last name is required',
-    'string.min': 'Last name must be at least 2 characters long',
-    'string.max': 'Last name cannot exceed 255 characters',
+  
+  lastName: nameStr.required().messages({
+    'string.empty': 'Last name is required'
   }),
-  email: Joi.string().required().email().max(255).messages({
-    'string.empty': 'Email is required',
-    'string.email': 'Please provide a valid email address',
-    'string.max': 'Email cannot exceed 255 characters',
-  }),
+
+  email: emailStr.required().messages({
+    'string.email': 'Invalid email format',
+    'any.required': 'Email is a required field'
+  })
 });
 
 export const updateUserSchema = Joi.object({
-  firstName: Joi.string().min(2).max(255).messages({
-    'string.min': 'First name must be at least 2 characters long',
-    'string.max': 'First name cannot exceed 255 characters',
-  }),
-  lastName: Joi.string().min(2).max(255).messages({
-    'string.min': 'Last name must be at least 2 characters long',
-    'string.max': 'Last name cannot exceed 255 characters',
-  }),
-  email: Joi.string().email().max(255).messages({
-    'string.email': 'Please provide a valid email address',
-    'string.max': 'Email cannot exceed 255 characters',
-  }),
+  firstName: nameStr,
+  lastName: nameStr,
+  email: emailStr
 })
-  .min(1)
-  .messages({
-    'object.min': 'At least one field must be provided for update',
-  });
+.min(1) // Ensure they aren't sending an empty {} body
+.messages({
+  'object.min': 'Provide at least one field to update'
+});
