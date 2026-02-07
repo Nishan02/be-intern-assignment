@@ -12,7 +12,7 @@ export class UserController {
 
   static async getAllUsers(_req: Request, res: Response) {
     try {
-      const list = await this.users.find();
+      const list = await UserController.users.find();
       return res.json(list);
     } catch (err) {
       return res.status(500).json({ error: 'Failed to retrieve users' });
@@ -22,7 +22,7 @@ export class UserController {
   static async getUserById(req: Request, res: Response) {
     try {
       const id = +req.params.id; // shorthand for parseInt
-      const user = await this.users.findOneBy({ id });
+      const user = await UserController.users.findOneBy({ id });
       
       if (!user) return res.status(404).json({ msg: 'User not found' });
       return res.json(user);
@@ -36,13 +36,13 @@ export class UserController {
       const { email } = req.body;
 
       // Quick check for existing email
-      const conflict = await this.users.findOne({ where: { email } });
+      const conflict = await UserController.users.findOne({ where: { email } });
       if (conflict) {
         return res.status(409).json({ msg: 'Email is already taken' });
       }
 
-      const newUser = this.users.create(req.body);
-      const saved = await this.users.save(newUser);
+      const newUser = UserController.users.create(req.body);
+      const saved = await UserController.users.save(newUser);
       
       return res.status(201).json(saved);
     } catch (err) {
@@ -53,11 +53,11 @@ export class UserController {
 
   static async updateUser(req: Request, res: Response) {
     try {
-      const user = await this.users.findOneBy({ id: +req.params.id });
+      const user = await UserController.users.findOneBy({ id: +req.params.id });
       if (!user) return res.status(404).json({ msg: 'User not found' });
 
-      this.users.merge(user, req.body);
-      const result = await this.users.save(user);
+      UserController.users.merge(user, req.body);
+      const result = await UserController.users.save(user);
       return res.json(result);
     } catch (err) {
       return res.status(500).json({ error: 'Update failed' });
@@ -66,7 +66,7 @@ export class UserController {
 
   static async deleteUser(req: Request, res: Response) {
     try {
-      const result = await this.users.delete(+req.params.id);
+      const result = await UserController.users.delete(+req.params.id);
       if (result.affected === 0) return res.status(404).json({ msg: 'User not found' });
       
       return res.status(204).send();
@@ -85,7 +85,7 @@ export class UserController {
     if (!userId) return res.status(400).json({ msg: 'Auth required' });
 
     try {
-      const me = await this.users.findOne({
+      const me = await UserController.users.findOne({
         where: { id: userId },
         relations: ['following'],
       });
@@ -99,7 +99,7 @@ export class UserController {
         return res.json({ posts: [], meta: { limit, skip } });
       }
 
-      const feedPosts = await this.posts
+      const feedPosts = await UserController.posts
         .createQueryBuilder('p')
         .leftJoinAndSelect('p.author', 'author')
         .leftJoinAndSelect('p.likes', 'like')
@@ -132,10 +132,10 @@ export class UserController {
     const offset = Number(req.query.offset) || 0;
 
     try {
-      const exists = await this.users.findOne({ where: { id: uid } });
+      const exists = await UserController.users.findOne({ where: { id: uid } });
       if (!exists) return res.status(404).json({ msg: 'User not found' });
 
-      const [list, count] = await this.users
+      const [list, count] = await UserController.users
         .createQueryBuilder('u')
         .innerJoin('u.following', 'target', 'target.id = :uid', { uid })
         .select(['u.id', 'u.firstName', 'u.lastName', 'u.email'])
@@ -155,7 +155,7 @@ export class UserController {
     const { type, startDate, endDate, limit = 10, offset = 0 } = req.query;
 
     try {
-      const q = this.activities
+      const q = UserController.activities
         .createQueryBuilder('act')
         .leftJoinAndSelect('act.user', 'u')
         .where('act.userId = :uid', { uid })
@@ -187,8 +187,8 @@ export class UserController {
     if (meId === targetId) return res.status(400).json({ msg: "Cannot follow yourself" });
 
     try {
-      const me = await this.users.findOne({ where: { id: meId }, relations: ['following'] });
-      const target = await this.users.findOneBy({ id: targetId });
+      const me = await UserController.users.findOne({ where: { id: meId }, relations: ['following'] });
+      const target = await UserController.users.findOneBy({ id: targetId });
 
       if (!me || !target) return res.status(404).json({ msg: "User not found" });
       
@@ -198,10 +198,10 @@ export class UserController {
       }
 
       me.following.push(target);
-      await this.users.save(me);
+      await UserController.users.save(me);
 
       // Log the follow activity
-      await this.activities.save({ 
+      await UserController.activities.save({ 
         userId: me.id, 
         type: ActivityType.FOLLOWED, 
         referenceId: target.id 

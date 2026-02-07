@@ -8,7 +8,7 @@ const router = Router();
 
 // Tag search - separate from CRUD for clarity
 // Note: test script relies on this specific path
-router.get("/hashtag/:tag", PostController.getByHashtag);
+router.get("/hashtag/:tag?", PostController.getByHashtag);
 
 // Public feed access
 router.get("/", PostController.getAll);
